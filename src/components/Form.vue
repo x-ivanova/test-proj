@@ -5,8 +5,7 @@
       <q-form v-if="action === 'CREATE'"
         @submit="onSubmitCreate"
         @reset="onReset"
-        class="q-gutter-md"
-      >
+        class="q-gutter-md" >
         <q-input
           id="name"
           v-model="name"
@@ -15,37 +14,30 @@
           bottom-slots
           hint="Поле должно содержать только латинские буквы и знак '_'"
           :error="!isValidName"
-          error-message="Поле должно содержать только латинские буквы и знак '_'"
-        >
-        </q-input>
-
+          error-message="Поле должно содержать только латинские буквы и знак '_'" />
         <q-select
           v-model="type"
           :options="types"
           label="Тип"
           :rules="[ val => val !== null || 'Обязательное поле' ]"
           bottom-slots
-          hint="Обязательное поле"
-        />
+          hint="Обязательное поле" />
         <q-input
           v-model.number="size"
           type="number"
-          label="Размер"
-        />
+          label="Размер" />
         <q-input
           v-model="value"
           label="Значение по умолчанию"
           bottom-slots
           hint="Значение должно соответствовать типу переменной"
-          :error="!isValidValue"
-          error-message="Значение не соответствует типу переменной."
-        />
+          :error="!isValidValue(this.type, this.value, this.size)"
+          error-message="Значение не соответствует типу переменной." />
         <q-input
           v-model="description"
           filled
           type="textarea"
-          label="Описание"
-        />
+          label="Описание" />
         <div>
           <q-btn label="Submit" type="submit" color="primary"/>
           <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
@@ -55,16 +47,14 @@
       <q-form v-if="action === 'SET'"
         @submit="onSubmitSet"
         @reset="onReset"
-        class="q-gutter-md"
-      >
+        class="q-gutter-md" >
         <q-select
           v-model="variableSet"
           :options="allVariables"
           label="Выберите переменную"
           :rules="[ val => val !== null || 'Обязательное поле' ]"
           bottom-slots
-          hint="Обязательное поле"
-        />
+          hint="Обязательное поле" />
         <q-input
           filled
           v-model="valueSet"
@@ -73,13 +63,12 @@
           hint="Обязательное поле"
           :error="!isValidValueSet"
           error-message="Значение не соответствует типу переменной либо превышает допустимый размер"
-        />
+          required />
         <q-input
           v-model="descriptionSet"
           filled
           type="textarea"
-          label="Описание"
-        />
+          label="Описание" />
         <div>
           <q-btn label="Submit" type="submit" color="primary"/>
           <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
@@ -89,20 +78,33 @@
       <q-form v-if="action === 'REPLACE'"
               @submit="onSubmitReplace"
               @reset="onReset"
-              class="q-gutter-md"
-      >
-        <q-select v-model="variableReplace" :options="strVariables" label="Выберите переменную" />
+              class="q-gutter-md" >
+        <q-select
+          v-model="variableReplace"
+          :options="strVariables"
+          label="Выберите переменную"
+          :rules="[ val => val !== null || 'Обязательное поле' ]"
+          bottom-slots
+          hint="Обязательное поле" />
         <q-input
-          filled
           v-model="oldStr"
           label="Заменяемая строка"
-        />
+          required
+          bottom-slots
+          hint="Обязательное поле" />
         <q-input
-          filled
           v-model="newStr"
           label="Заменяющая строка"
-        />
-        <q-select v-model="resVariable" :options="strVariables" label="Результирующая переменная" />
+          required
+          bottom-slots
+          hint="Обязательное поле" />
+        <q-select
+          v-model="resVariable"
+          :options="strVariables"
+          label="Результирующая переменная"
+          :rules="[ val => val !== null || 'Обязательное поле' ]"
+          bottom-slots
+          hint="Обязательное поле" />
         <q-input
           v-model="descriptionReplace"
           filled
@@ -118,10 +120,21 @@
       <q-form v-if="action === 'BITWISE'"
               @submit="onSubmitBitwise"
               @reset="onReset"
-              class="q-gutter-md"
-      >
-        <q-select v-model="variableBit" :options="allVariables" label="Выберите переменную" />
-        <q-select v-model="typeBit" :options="typesBit" label="Тип сдвига" />
+              class="q-gutter-md" >
+        <q-select
+          v-model="variableBit"
+          :options="allVariables"
+          label="Выберите переменную"
+          :rules="[ val => val !== null || 'Обязательное поле' ]"
+          bottom-slots
+          hint="Обязательное поле" />
+        <q-select
+          v-model="typeBit"
+          :options="typesBit"
+          label="Тип сдвига"
+          :rules="[ val => val !== null || 'Обязательное поле' ]"
+          bottom-slots
+          hint="Обязательное поле" />
         <q-input
           filled
           v-model="mask"
@@ -134,7 +147,10 @@
         <q-select
           v-model="resVariableBit"
           :options="allVariables"
-          label="Результирующая переменная" />
+          label="Результирующая переменная"
+          :rules="[ val => val !== null || 'Обязательное поле' ]"
+          bottom-slots
+          hint="Обязательное поле" />
         <q-input
           v-model="descriptionBitwise"
           filled
@@ -193,30 +209,17 @@ export default {
   },
   computed: {
     isValidName() {
-      return /[A-Za-z_]+$/.test(this.name) || !this.name;
+      return /^[A-Za-z_]*$/.test(this.name);
     },
     isValidMask() {
-      return /[0-9ABCDF]+$/.test(this.mask) || !this.mask;
-    },
-    isValidValue() {
-      if (this.type === 'boolean') {
-        return /^(true|false)$/.test(this.value) || !this.value;
-      } if (this.type === 'bytes') {
-        return /^[ 0-1]+$/.test(this.value) || !this.value;
-      } if (this.type === 'double') {
-        return /^\d+(?:[.,]\d+)?$/.test(this.value) || !this.value;
-      } if ((this.type === 'integer') || ((this.type === 'long'))) {
-        return /^[-+]?\d*$/.test(this.value) || !this.value;
-      } if (this.type === 'string') {
-        return true;
-      }
-      return true;
+      return /^[0-9ABCDEF]*$/.test(this.mask);
     },
     isValidValueSet() {
-      if (this.variableSet) {
+      if ((this.variableSet) && (this.valueSet)) {
         const varInd = this.data.findIndex((item) => item.name === this.variableSet);
         const varSize = this.data[varInd].size;
-        console.log(varSize);
+        const varType = this.data[varInd].type;
+        return ((this.valueSet.length <= varSize) && (this.isValidVal(varType, this.valueSet)));
       }
       return true;
     },
@@ -268,6 +271,23 @@ export default {
     },
     // to do
     onReset() {
+    },
+    isValidVal(type, val) {
+      if (type === 'boolean') {
+        return /^(true|false)$/.test(val) || !val;
+      } if (type === 'bytes') {
+        return /^[ 0-1]+$/.test(val) || !val;
+      } if (type === 'double') {
+        return /^\d+(?:[.,]\d+)?$/.test(val) || !val;
+      } if ((type === 'integer') || ((val === 'long'))) {
+        return /^[-+]?\d*$/.test(val) || !val;
+      } if (type === 'string') {
+        return true;
+      }
+      return true;
+    },
+    isValidValue(type, val, size) {
+      return ((this.isValidVal(type, val)) && (val.length <= size));
     },
   },
 };

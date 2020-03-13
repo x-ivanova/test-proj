@@ -7,6 +7,7 @@
         :columns="columns"
         row-key="id"
         :filter="search"
+        :pagination.sync="myPagination"
       >
         <template v-slot:header="props">
           <q-tr :props="props">
@@ -160,6 +161,9 @@ export default {
   },
   data() {
     return {
+      myPagination: {
+        rowsPerPage: 0,
+      },
       search: '',
       editing: false,
       editingArr: [],
@@ -177,7 +181,7 @@ export default {
           name: 'size', align: 'center', label: 'Размер', field: 'size',
         },
         {
-          name: 'value', align: 'center', label: 'Значение', field: 'value',
+          name: 'value', align: 'center', label: 'Значение по умолчанию', field: 'value',
         },
         {
           name: 'description', align: 'center', label: 'Описание', field: 'description',
