@@ -23,15 +23,16 @@
           v-model="type"
           :options="types"
           label="Тип"
-          :rules="[ val => val !== null || 'Please use maximum 3 characters' ]" />
+          :rules="[ val => val !== null || 'Обязательное поле' ]"
+          bottom-slots
+          hint="Обязательное поле"
+        />
         <q-input
           v-model.number="size"
           type="number"
           label="Размер"
-          filled
         />
         <q-input
-          filled
           v-model="value"
           label="Значение по умолчанию"
           bottom-slots
@@ -56,11 +57,22 @@
         @reset="onReset"
         class="q-gutter-md"
       >
-        <q-select v-model="variableSet" :options="allVariables" label="Выберите переменную" />
+        <q-select
+          v-model="variableSet"
+          :options="allVariables"
+          label="Выберите переменную"
+          :rules="[ val => val !== null || 'Обязательное поле' ]"
+          bottom-slots
+          hint="Обязательное поле"
+        />
         <q-input
           filled
           v-model="valueSet"
           label="Новое значение"
+          bottom-slots
+          hint="Обязательное поле"
+          :error="!isValidValueSet"
+          error-message="Значение не соответствует типу переменной либо превышает допустимый размер"
         />
         <q-input
           v-model="descriptionSet"
@@ -197,6 +209,14 @@ export default {
         return /^[-+]?\d*$/.test(this.value) || !this.value;
       } if (this.type === 'string') {
         return true;
+      }
+      return true;
+    },
+    isValidValueSet() {
+      if (this.variableSet) {
+        const varInd = this.data.findIndex((item) => item.name === this.variableSet);
+        const varSize = this.data[varInd].size;
+        console.log(varSize);
       }
       return true;
     },
