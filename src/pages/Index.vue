@@ -217,8 +217,13 @@ export default {
       this.action = action;
     },
     create(data) {
-      this.data.push(data);
-      this.getAllVariables();
+      const equalName = this.data.find((item) => item.name === data.name);
+      if (equalName) {
+        this.alert('Переменная с таким именем уже существует!');
+      } else {
+        this.data.push(data);
+        this.getAllVariables();
+      }
     },
     add(variable, data) {
       const index = this.data.findIndex((item) => item.name === variable);

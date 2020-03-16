@@ -4,7 +4,7 @@
       <div class="text-h6">{{action}}</div>
       <q-form v-if="action === 'CREATE'"
         @submit="onSubmitCreate"
-        @reset="onReset(name, size)"
+        @reset="onReset()"
         class="q-gutter-md" >
         <q-input
           id="name"
@@ -231,6 +231,13 @@ export default {
           break;
         default:
           break;
+      }
+    },
+    variableSet() {
+      if (this.action === 'SET') {
+        const variable = this.data.find((item) => item.name === this.variableSet);
+        const { value } = variable;
+        this.valueSet = value;
       }
     },
   },
