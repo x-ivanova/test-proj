@@ -46,7 +46,7 @@
                 round
                 color="primary"
                 icon="edit"
-                @click="edit()" />
+                @click="edit(props.row.id, props.row)" />
             </q-td>
             <q-td class="text-center">
               <q-btn
@@ -59,7 +59,7 @@
           </q-tr>
           <q-tr
             v-for="(actionObj, index) in props.row.actions"
-            :key="index"
+            :key="actionObj.id"
             v-show="props.expand"
             :props="props" >
             <q-td>
@@ -84,7 +84,7 @@
                 round
                 color="primary"
                 icon="edit"
-                @click="edit(index, props.row)" />
+                @click="edit(props.row.id, props.row.actions[index], index)" />
             </q-td>
             <q-td class="text-center">
               <q-btn
@@ -142,10 +142,14 @@
         :allVariables=variables
         :strVariables=strVariables
         :data=data
-        :editing=editing
-        :editingArr=editingArr
+        :editingObj=editingObj
+        :editingInd=editingInd
+        :editingIdCreate=editingIdCreate
         @add="add"
         @create="create"
+        @close="closeForm"
+        @replace="replace"
+        @replaceCreate="replaceCreate"
        />
     </div>
   </q-page>
@@ -165,8 +169,9 @@ export default {
         rowsPerPage: 0,
       },
       search: '',
-      editing: false,
-      editingArr: [],
+      editingInd: null,
+      editingObj: {},
+      editingIdCreate: null,
       columns: [
         {
           name: 'action', align: 'center', label: 'Действие', field: 'action',
@@ -194,6 +199,7 @@ export default {
       removeConf: false,
       confirmVar: false,
       fields: {
+        id: 'Идентификатор',
         action: 'Действие',
         variableName: 'Имя переменной',
         newValue: 'Новое значение',
@@ -219,6 +225,28 @@ export default {
       this.data[index].actions.push(data);
       this.alert('Действие добавлено!');
     },
+    replace(idCreate, data, ind) {
+      const indCreate = this.data.findIndex((item) => item.id === idCreate);
+      this.data[indCreate].actions.splice(ind, 1, data);
+      this.alert('Действие отредактировано!');
+    },
+    // eslint-disable-next-line consistent-return
+    replaceCreate(idCreate, newData, oldData) {
+      if (newData.name !== oldData.name) {
+        // eslint-disable-next-line no-plusplus
+        for (let i = 0; i < newData.actions.length; i++) {
+          this.$set(newData.actions[i], 'variableName', newData.name);
+        }
+      }
+      if (newData.size !== oldData.size) {
+        if (newData.actions.find((item) => item.action === 'SET' && item.newValue.length > newData.size)) {
+          this.alert('Невозможно изменить размер данной переменнной, так как в последующих действиях SET переменная занимает больше места');
+          return false;
+        }
+      }
+      const indCreate = this.data.findIndex((item) => item.id === idCreate);
+      this.data.splice(indCreate, 1, newData);
+    },
     getAllVariables() {
       const createdVariables = this.data.filter((item) => item.action === 'CREATE');
       this.variables = createdVariables.map((item) => item.name);
@@ -232,10 +260,13 @@ export default {
         obj.actions.splice(ind - 1, 2, obj.actions[ind], obj.actions[ind - 1]);
       }
     },
-    edit(ind, data) {
-      this.editing = true;
-      this.editingArr = [ind, data];
-      this.action = data.actions[ind].action;
+    edit(idCreate, data, ind) {
+      this.editingIdCreate = idCreate;
+      if (ind) {
+        this.editingInd = ind;
+      }
+      this.editingObj = data;
+      this.action = data.action;
     },
     remove(ind, data) {
       let message = '';
@@ -268,6 +299,9 @@ export default {
       this.$q.dialog({
         message,
       });
+    },
+    closeForm() {
+      this.action = '';
     },
   },
 

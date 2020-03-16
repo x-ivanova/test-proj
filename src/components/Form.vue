@@ -4,7 +4,7 @@
       <div class="text-h6">{{action}}</div>
       <q-form v-if="action === 'CREATE'"
         @submit="onSubmitCreate"
-        @reset="onReset"
+        @reset="onReset(name, size)"
         class="q-gutter-md" >
         <q-input
           id="name"
@@ -21,7 +21,8 @@
           label="Тип"
           :rules="[ val => val !== null || 'Обязательное поле' ]"
           bottom-slots
-          hint="Обязательное поле" />
+          hint="Обязательное поле"
+          :disable="editing === true" />
         <q-input
           v-model.number="size"
           type="number"
@@ -43,7 +44,6 @@
           <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
         </div>
       </q-form>
-
       <q-form v-if="action === 'SET'"
         @submit="onSubmitSet"
         @reset="onReset"
@@ -54,7 +54,9 @@
           label="Выберите переменную"
           :rules="[ val => val !== null || 'Обязательное поле' ]"
           bottom-slots
-          hint="Обязательное поле" />
+          hint="Обязательное поле"
+          :disable="editing === true"
+        />
         <q-input
           filled
           v-model="valueSet"
@@ -74,7 +76,6 @@
           <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
         </div>
       </q-form>
-
       <q-form v-if="action === 'REPLACE'"
               @submit="onSubmitReplace"
               @reset="onReset"
@@ -85,7 +86,8 @@
           label="Выберите переменную"
           :rules="[ val => val !== null || 'Обязательное поле' ]"
           bottom-slots
-          hint="Обязательное поле" />
+          hint="Обязательное поле"
+          :disable="editing === true" />
         <q-input
           v-model="oldStr"
           label="Заменяемая строка"
@@ -127,7 +129,8 @@
           label="Выберите переменную"
           :rules="[ val => val !== null || 'Обязательное поле' ]"
           bottom-slots
-          hint="Обязательное поле" />
+          hint="Обязательное поле"
+          :disable="editing === true" />
         <q-select
           v-model="typeBit"
           :options="typesBit"
@@ -176,19 +179,21 @@ export default {
     allVariables: Array,
     data: Array,
     strVariables: Array,
-    editing: Boolean,
-    editingArr: Array,
+    editingInd: Number,
+    editingIdCreate: String,
+    editingObj: Object,
   },
   data() {
     return {
-      name: '',
+      editing: false,
+      name: null,
       type: null,
       types: [
         'boolean', 'bytes', 'double', 'integer', 'long', 'string',
       ],
       size: 0,
       value: '',
-      description: '',
+      description: null,
       valueSet: null,
       variableSet: null,
       descriptionSet: '',
@@ -205,7 +210,29 @@ export default {
       mask: '',
       resVariableBit: null,
       descriptionBitwise: '',
+      tmpActions: [],
     };
+  },
+  watch: {
+    editingObj() {
+      this.editing = true;
+      switch (this.editingObj.action) {
+        case 'CREATE':
+          this.editCreate();
+          break;
+        case 'SET':
+          this.editSet();
+          break;
+        case 'REPLACE':
+          this.editReplace();
+          break;
+        case 'BITWISE':
+          this.editBitwise();
+          break;
+        default:
+          break;
+      }
+    },
   },
   computed: {
     isValidName() {
@@ -236,19 +263,36 @@ export default {
         description: this.description,
         actions: [],
       };
-      this.$emit('create', this.newCreateObj);
+      if (this.editing) {
+        this.newCreateObj.actions = this.tmpActions;
+        this.$emit('replaceCreate', this.editingIdCreate, this.newCreateObj, this.editingObj);
+        this.editing = false;
+      } else {
+        this.$emit('create', this.newCreateObj);
+      }
+      this.$emit('close');
+      this.onReset(this.name, this.type, this.size, this.description);
     },
     onSubmitSet() {
       this.newSetObj = {
+        id: uid(),
         action: 'SET',
         variableName: this.variableSet,
         newValue: this.valueSet,
         description: this.descriptionSet,
       };
-      this.$emit('add', this.variableSet, this.newSetObj);
+      if (this.editing) {
+        this.$emit('replace', this.editingIdCreate, this.newSetObj, this.editingInd);
+        this.editing = false;
+      } else {
+        this.$emit('add', this.variableSet, this.newSetObj);
+      }
+      this.$emit('close');
+      this.onReset();
     },
     onSubmitReplace() {
       this.newReplaceObj = {
+        id: uid(),
         action: 'REPLACE',
         variableName: this.variableReplace,
         oldStr: this.oldStr,
@@ -256,10 +300,18 @@ export default {
         variableResult: this.resVariable,
         description: this.descriptionReplace,
       };
-      this.$emit('add', this.variableReplace, this.newReplaceObj);
+      if (this.editing) {
+        this.$emit('replace', this.editingIdCreate, this.newReplaceObj, this.editingInd);
+        this.editing = false;
+      } else {
+        this.$emit('add', this.variableReplace, this.newReplaceObj);
+      }
+      this.$emit('close');
+      this.onReset();
     },
     onSubmitBitwise() {
       this.newBitwiseObj = {
+        id: uid(),
         action: 'BITWISE',
         variableName: this.variableBit,
         operation: this.typeBit,
@@ -267,10 +319,34 @@ export default {
         variableResult: this.resVariableBit,
         description: this.descriptionBitwise,
       };
-      this.$emit('add', this.variableBit, this.newBitwiseObj);
+      if (this.editing) {
+        this.$emit('replace', this.editingIdCreate, this.newBitwiseObj, this.editingInd);
+        this.editing = false;
+      } else {
+        this.$emit('add', this.variableBit, this.newBitwiseObj);
+      }
+      this.$emit('close');
+      this.onReset();
     },
-    // to do
     onReset() {
+      this.name = null;
+      this.type = null;
+      this.size = 0;
+      this.value = '';
+      this.description = null;
+      this.valueSet = null;
+      this.variableSet = null;
+      this.descriptionSet = '';
+      this.variableReplace = null;
+      this.oldStr = '';
+      this.newStr = '';
+      this.resVariable = null;
+      this.descriptionReplace = '';
+      this.variableBit = null;
+      this.typeBit = null;
+      this.mask = '';
+      this.resVariableBit = null;
+      this.descriptionBitwise = '';
     },
     isValidVal(type, val) {
       if (type === 'boolean') {
@@ -279,7 +355,7 @@ export default {
         return /^[ 0-1]+$/.test(val) || !val;
       } if (type === 'double') {
         return /^\d+(?:[.,]\d+)?$/.test(val) || !val;
-      } if ((type === 'integer') || ((val === 'long'))) {
+      } if ((type === 'integer') || ((type === 'long'))) {
         return /^[-+]?\d*$/.test(val) || !val;
       } if (type === 'string') {
         return true;
@@ -288,6 +364,33 @@ export default {
     },
     isValidValue(type, val, size) {
       return ((this.isValidVal(type, val)) && (val.length <= size));
+    },
+    editCreate() {
+      this.name = this.editingObj.name;
+      this.type = this.editingObj.type;
+      this.size = this.editingObj.size;
+      this.value = this.editingObj.value;
+      this.description = this.editingObj.description;
+      this.tmpActions = this.editingObj.actions;
+    },
+    editSet() {
+      this.variableSet = this.editingObj.variableName;
+      this.valueSet = this.editingObj.newValue;
+      this.descriptionSet = this.editingObj.description;
+    },
+    editReplace() {
+      this.variableReplace = this.editingObj.variableName;
+      this.oldStr = this.editingObj.oldStr;
+      this.newStr = this.editingObj.newStr;
+      this.resVariable = this.editingObj.variableResult;
+      this.descriptionReplace = this.editingObj.description;
+    },
+    editBitwise() {
+      this.variableBit = this.editingObj.variableName;
+      this.typeBit = this.editingObj.operation;
+      this.mask = this.editingObj.mask;
+      this.resVariableBit = this.editingObj.variableResult;
+      this.descriptionBitwise = this.editingObj.description;
     },
   },
 };
