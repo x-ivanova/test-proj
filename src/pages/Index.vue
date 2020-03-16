@@ -56,7 +56,7 @@
                 size="sm"
                 round
                 color="primary"
-                icon="remove"
+                icon="delete"
                 @click="remove(props.row.id, data)"
               />
             </q-td>
