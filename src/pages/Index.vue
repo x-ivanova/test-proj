@@ -26,12 +26,14 @@
         <template v-slot:body="props">
           <q-tr :props="props">
             <q-td auto-width>
-              <q-btn size="sm"
-                     color="primary"
-                     round
-                     dense
-                     @click="props.expand = !props.expand"
-                     :icon="props.expand ? 'remove' : 'add'" />
+              <q-btn
+                size="sm"
+                color="primary"
+                round
+                dense
+                @click="props.expand = !props.expand"
+                :icon="props.expand ? 'remove' : 'add'"
+              />
             </q-td>
             <q-td
               v-for="col in props.cols"
@@ -46,7 +48,8 @@
                 round
                 color="primary"
                 icon="edit"
-                @click="edit(props.row.id, props.row)" />
+                @click="edit(props.row.id, props.row)"
+              />
             </q-td>
             <q-td class="text-center">
               <q-btn
@@ -54,21 +57,24 @@
                 round
                 color="primary"
                 icon="remove"
-                @click="remove(props.row.id, data)" />
+                @click="remove(props.row.id, data)"
+              />
             </q-td>
           </q-tr>
           <q-tr
             v-for="(actionObj, index) in props.row.actions"
             :key="actionObj.id"
             v-show="props.expand"
-            :props="props" >
+            :props="props"
+          >
             <q-td>
               <q-btn
                 size="sm"
                 round
                 color="primary"
                 icon="arrow_upward"
-                @click="moveToTheTop(props.row, actionObj, index)" />
+                @click="moveToTheTop(props.row, actionObj, index)"
+              />
             </q-td>
             <q-td colspan="6">
               <ul>
@@ -84,7 +90,8 @@
                 round
                 color="primary"
                 icon="edit"
-                @click="edit(props.row.id, props.row.actions[index], index)" />
+                @click="edit(props.row.id, props.row.actions[index], index)"
+              />
             </q-td>
             <q-td class="text-center">
               <q-btn
@@ -92,12 +99,19 @@
                 round
                 color="primary"
                 icon="remove"
-                @click="remove(index, props.row)" />
+                @click="remove(index, props.row)"
+              />
             </q-td>
           </q-tr>
         </template>
         <template v-slot:top-right>
-          <q-input borderless dense debounce="300" v-model="search" placeholder="Search">
+          <q-input
+            borderless
+            dense
+            debounce="300"
+            v-model="search"
+            placeholder="Search"
+          >
             <template v-slot:append>
               <q-icon name="search" />
             </template>
@@ -108,29 +122,45 @@
         </template>
       </q-table>
     </div>
-
     <div class="q-pa-md">
-    <q-btn-dropdown color="primary" label="Выберите действие:">
+    <q-btn-dropdown
+      color="primary"
+      label="Выберите действие:"
+      :disable-dropdown="editing"
+    >
       <q-list>
-        <q-item clickable v-close-popup @click="onChangeAction('CREATE')">
+        <q-item
+          clickable
+          v-close-popup
+          @click="onChangeAction('CREATE')"
+        >
           <q-item-section>
             <q-item-label>CREATE</q-item-label>
           </q-item-section>
         </q-item>
-
-        <q-item clickable v-close-popup @click="onChangeAction('SET')">
+        <q-item
+          clickable
+          v-close-popup
+          @click="onChangeAction('SET')"
+        >
           <q-item-section>
             <q-item-label>SET</q-item-label>
           </q-item-section>
         </q-item>
-
-        <q-item clickable v-close-popup @click="onChangeAction('BITWISE')">
+        <q-item
+          clickable
+          v-close-popup
+          @click="onChangeAction('BITWISE')"
+        >
           <q-item-section>
             <q-item-label>BITWISE</q-item-label>
           </q-item-section>
         </q-item>
-
-        <q-item clickable v-close-popup @click="onChangeAction('REPLACE')">
+        <q-item
+          clickable
+          v-close-popup
+          @click="onChangeAction('REPLACE')"
+        >
           <q-item-section>
             <q-item-label>REPLACE</q-item-label>
           </q-item-section>
@@ -138,13 +168,13 @@
       </q-list>
     </q-btn-dropdown>
       <Form
-        :action=action
-        :allVariables=variables
-        :strVariables=strVariables
-        :data=data
-        :editingObj=editingObj
-        :editingInd=editingInd
-        :editingIdCreate=editingIdCreate
+        :action="action"
+        :allVariables="variables"
+        :strVariables="strVariables"
+        :data="data"
+        :editingObj="editingObj"
+        :editingInd="editingInd"
+        :editingIdCreate="editingIdCreate"
         @add="add"
         @create="create"
         @close="closeForm"
@@ -165,6 +195,7 @@ export default {
   },
   data() {
     return {
+      editing: false,
       myPagination: {
         rowsPerPage: 0,
       },
@@ -234,23 +265,25 @@ export default {
       const indCreate = this.data.findIndex((item) => item.id === idCreate);
       this.data[indCreate].actions.splice(ind, 1, data);
       this.alert('Действие отредактировано!');
+      this.editing = false;
     },
     // eslint-disable-next-line consistent-return
     replaceCreate(idCreate, newData, oldData) {
       if (newData.name !== oldData.name) {
-        // eslint-disable-next-line no-plusplus
-        for (let i = 0; i < newData.actions.length; i++) {
-          this.$set(newData.actions[i], 'variableName', newData.name);
-        }
+        newData.actions.map((item, i) => this.$set(newData.actions[i], 'variableName', newData.name));
       }
       if (newData.size !== oldData.size) {
         if (newData.actions.find((item) => item.action === 'SET' && item.newValue.length > newData.size)) {
           this.alert('Невозможно изменить размер данной переменнной, так как в последующих действиях SET переменная занимает больше места');
+          this.editing = false;
+          this.editingObj = {};
           return false;
         }
       }
       const indCreate = this.data.findIndex((item) => item.id === idCreate);
       this.data.splice(indCreate, 1, newData);
+      this.editing = false;
+      this.getAllVariables();
     },
     getAllVariables() {
       const createdVariables = this.data.filter((item) => item.action === 'CREATE');
@@ -272,6 +305,7 @@ export default {
       }
       this.editingObj = data;
       this.action = data.action;
+      this.editing = true;
     },
     remove(ind, data) {
       let message = '';

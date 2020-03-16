@@ -2,10 +2,12 @@
   <q-card class="my-card" v-if="action">
     <div class="q-pa-md">
       <div class="text-h6">{{action}}</div>
-      <q-form v-if="action === 'CREATE'"
+      <q-form
+        v-if="action === 'CREATE'"
         @submit="onSubmitCreate"
         @reset="onReset()"
-        class="q-gutter-md" >
+        class="q-gutter-md"
+      >
         <q-input
           id="name"
           v-model="name"
@@ -14,7 +16,8 @@
           bottom-slots
           hint="Поле должно содержать только латинские буквы и знак '_'"
           :error="!isValidName"
-          error-message="Поле должно содержать только латинские буквы и знак '_'" />
+          error-message="Поле должно содержать только латинские буквы и знак '_'"
+        />
         <q-select
           v-model="type"
           :options="types"
@@ -22,32 +25,50 @@
           :rules="[ val => val !== null || 'Обязательное поле' ]"
           bottom-slots
           hint="Обязательное поле"
-          :disable="editing === true" />
+          :disable="editing === true"
+        />
         <q-input
           v-model.number="size"
           type="number"
-          label="Размер" />
+          label="Размер"
+          min="1"
+          :rules="[ val => val > 0 || 'Размер должен быть положительным числом' ]"
+        />
         <q-input
           v-model="value"
           label="Значение по умолчанию"
           bottom-slots
           hint="Значение должно соответствовать типу переменной"
           :error="!isValidValue(this.type, this.value, this.size)"
-          error-message="Значение не соответствует типу переменной." />
+          error-message="Значение не соответствует типу переменной."
+        />
         <q-input
           v-model="description"
           filled
           type="textarea"
-          label="Описание" />
+          label="Описание"
+        />
         <div>
-          <q-btn label="Submit" type="submit" color="primary"/>
-          <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
+          <q-btn
+            label="Submit"
+            type="submit"
+            color="primary"
+          />
+          <q-btn
+            label="Reset"
+            type="reset"
+            color="primary"
+            flat
+            class="q-ml-sm"
+          />
         </div>
       </q-form>
-      <q-form v-if="action === 'SET'"
+      <q-form
+        v-if="action === 'SET'"
         @submit="onSubmitSet"
         @reset="onReset"
-        class="q-gutter-md" >
+        class="q-gutter-md"
+      >
         <q-select
           v-model="variableSet"
           :options="allVariables"
@@ -65,21 +86,35 @@
           hint="Обязательное поле"
           :error="!isValidValueSet"
           error-message="Значение не соответствует типу переменной либо превышает допустимый размер"
-          required />
+          required
+        />
         <q-input
           v-model="descriptionSet"
           filled
           type="textarea"
-          label="Описание" />
+          label="Описание"
+        />
         <div>
-          <q-btn label="Submit" type="submit" color="primary"/>
-          <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
+          <q-btn
+            label="Submit"
+            type="submit"
+            color="primary"
+          />
+          <q-btn
+            label="Reset"
+            type="reset"
+            color="primary"
+            flat
+            class="q-ml-sm"
+          />
         </div>
       </q-form>
-      <q-form v-if="action === 'REPLACE'"
-              @submit="onSubmitReplace"
-              @reset="onReset"
-              class="q-gutter-md" >
+      <q-form
+        v-if="action === 'REPLACE'"
+        @submit="onSubmitReplace"
+        @reset="onReset"
+        class="q-gutter-md"
+      >
         <q-select
           v-model="variableReplace"
           :options="strVariables"
@@ -87,26 +122,30 @@
           :rules="[ val => val !== null || 'Обязательное поле' ]"
           bottom-slots
           hint="Обязательное поле"
-          :disable="editing === true" />
+          :disable="editing === true"
+        />
         <q-input
           v-model="oldStr"
           label="Заменяемая строка"
           required
           bottom-slots
-          hint="Обязательное поле" />
+          hint="Обязательное поле"
+        />
         <q-input
           v-model="newStr"
           label="Заменяющая строка"
           required
           bottom-slots
-          hint="Обязательное поле" />
+          hint="Обязательное поле"
+        />
         <q-select
           v-model="resVariable"
           :options="strVariables"
           label="Результирующая переменная"
           :rules="[ val => val !== null || 'Обязательное поле' ]"
           bottom-slots
-          hint="Обязательное поле" />
+          hint="Обязательное поле"
+        />
         <q-input
           v-model="descriptionReplace"
           filled
@@ -114,15 +153,26 @@
           label="Описание"
         />
         <div>
-          <q-btn label="Submit" type="submit" color="primary"/>
-          <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
+          <q-btn
+            label="Submit"
+            type="submit"
+            color="primary"
+          />
+          <q-btn
+            label="Reset"
+            type="reset"
+            color="primary"
+            flat
+            class="q-ml-sm"
+          />
         </div>
       </q-form>
-
-      <q-form v-if="action === 'BITWISE'"
-              @submit="onSubmitBitwise"
-              @reset="onReset"
-              class="q-gutter-md" >
+      <q-form
+        v-if="action === 'BITWISE'"
+        @submit="onSubmitBitwise"
+        @reset="onReset"
+        class="q-gutter-md"
+      >
         <q-select
           v-model="variableBit"
           :options="allVariables"
@@ -130,14 +180,16 @@
           :rules="[ val => val !== null || 'Обязательное поле' ]"
           bottom-slots
           hint="Обязательное поле"
-          :disable="editing === true" />
+          :disable="editing === true"
+        />
         <q-select
           v-model="typeBit"
           :options="typesBit"
           label="Тип сдвига"
           :rules="[ val => val !== null || 'Обязательное поле' ]"
           bottom-slots
-          hint="Обязательное поле" />
+          hint="Обязательное поле"
+        />
         <q-input
           filled
           v-model="mask"
@@ -153,7 +205,8 @@
           label="Результирующая переменная"
           :rules="[ val => val !== null || 'Обязательное поле' ]"
           bottom-slots
-          hint="Обязательное поле" />
+          hint="Обязательное поле"
+        />
         <q-input
           v-model="descriptionBitwise"
           filled
@@ -161,8 +214,18 @@
           label="Описание"
         />
         <div>
-          <q-btn label="Submit" type="submit" color="primary"/>
-          <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
+          <q-btn
+            label="Submit"
+            type="submit"
+            color="primary"
+          />
+          <q-btn
+            label="Reset"
+            type="reset"
+            color="primary"
+            flat
+            class="q-ml-sm"
+          />
         </div>
       </q-form>
     </div>
@@ -216,25 +279,27 @@ export default {
   watch: {
     editingObj() {
       this.editing = true;
-      switch (this.editingObj.action) {
-        case 'CREATE':
-          this.editCreate();
-          break;
-        case 'SET':
-          this.editSet();
-          break;
-        case 'REPLACE':
-          this.editReplace();
-          break;
-        case 'BITWISE':
-          this.editBitwise();
-          break;
-        default:
-          break;
+      if (this.editingObj.action) {
+        switch (this.editingObj.action) {
+          case 'CREATE':
+            this.editCreate();
+            break;
+          case 'SET':
+            this.editSet();
+            break;
+          case 'REPLACE':
+            this.editReplace();
+            break;
+          case 'BITWISE':
+            this.editBitwise();
+            break;
+          default:
+            break;
+        }
       }
     },
     variableSet() {
-      if (this.action === 'SET') {
+      if ((this.action === 'SET') && (!this.editing)) {
         const variable = this.data.find((item) => item.name === this.variableSet);
         const { value } = variable;
         this.valueSet = value;
@@ -336,20 +401,22 @@ export default {
       this.onReset();
     },
     onReset() {
-      this.name = null;
-      this.type = null;
+      if (!this.editing) {
+        this.name = null;
+        this.variableSet = null;
+        this.variableReplace = null;
+        this.variableBit = null;
+        this.type = null;
+      }
       this.size = 0;
       this.value = '';
       this.description = null;
       this.valueSet = null;
-      this.variableSet = null;
       this.descriptionSet = '';
-      this.variableReplace = null;
       this.oldStr = '';
       this.newStr = '';
       this.resVariable = null;
       this.descriptionReplace = '';
-      this.variableBit = null;
       this.typeBit = null;
       this.mask = '';
       this.resVariableBit = null;
@@ -383,6 +450,7 @@ export default {
     editSet() {
       this.variableSet = this.editingObj.variableName;
       this.valueSet = this.editingObj.newValue;
+      console.log(this.editingObj.newValue);
       this.descriptionSet = this.editingObj.description;
     },
     editReplace() {
