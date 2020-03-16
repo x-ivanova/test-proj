@@ -450,7 +450,6 @@ export default {
     editSet() {
       this.variableSet = this.editingObj.variableName;
       this.valueSet = this.editingObj.newValue;
-      console.log(this.editingObj.newValue);
       this.descriptionSet = this.editingObj.description;
     },
     editReplace() {
